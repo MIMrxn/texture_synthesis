@@ -1,3 +1,9 @@
+"""
+    Texture synthesis based off of Gatys 
+    "Texture Synthesis Using Convolutional Neural Networks"
+    arXiv:1505.07376v3 [cs.CV] 6 Nov 2015
+"""
+
 import keras
 
 from keras.models import Model, Sequential
@@ -93,10 +99,43 @@ def compute_gram_matrix(activation):
 
 # calculate mean squared distance between original image's gram matrix 
 # and generated image's gram matrix
-def compute_E(G_img, G_gen, N, M):
-    E = 1 / (4*np.square(N)*np.square(M))
+def compute_E(w, G_img, G_gen, activation):
+    # ensure number of axes of tensor is 4
+    assert K.ndim(activation) == 4
+    # get activation output shape
+    activation_shape = activation.output_shape
+    # N: number of filters
+    # M: size of each feature map
+    N = activation_shape[3]
+    M = activation_shape[1] * activation_shape[2]
+    s = 1.0 / (4.0 * K.square(N) * K.square(M))
+    E = w * s * K.sum(K.square(G_img - G_gen))
     return E
-    
+
+# compute derivative of E
+def compute_derivative_E(w, E, F_gen, G_img, G_gen, activation):
+    # ensure number of axes of tensor is 4
+    assert K.ndim(activation) == 4
+    # get activation output shape
+    activation_shape = activation.output_shape
+    # N: number of filters
+    # M: size of each feature map
+    N = activation_shape[3]
+    M = activation_shape[1] * activation_shape[2]
+    s = 1.0 / (K.square(N) * K.square(M))
+    gradient = w * s * K.dot(K.transpose(F_gen), G_img - G_gen)
+    return gradient
+
+# keras and tesnorflow do not offer L-BFGS
+# possible solutions exist here:
+# https://github.com/keras-team/keras/issues/5085
+# https://github.com/tensorflow/tensorflow/issues/446
+# try existing optimizers
+# learning rate and clipping are shared with all optimizers
+sgd_opt = keras.optimizers.SGD()
+adam_opt = keras.optimizers.Adam()
+rmsprop_opt = keras.optimizers.rmsprop()
+
 ## TODO preprocess images
 def preprocess_img(img, img_size):
     ## TODO; crop center of each image
