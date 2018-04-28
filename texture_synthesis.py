@@ -1,4 +1,3 @@
-
 import keras
 
 from keras.models import Model, Sequential
@@ -66,20 +65,37 @@ for i in range(len(vgg19_layers)):
 gatys_model = keras.models.Sequential(layers = gatys_layers)
 gatys_model.summary()
 
-## TODO: ADD WEIGHTS INTO GATYS MODEL
+## TODO: ADD RESCALED WEIGHTS INTO GATYS MODEL
 
 # get the output of each layer to use to calculate the gram matrix
-outputs = dict([(layer.name, layer.output) for layer in gatys_model.layers])
+# output has shape (batch_size, img_size, img_size, num_filters)
+# activations_dict = dict([(layer.name, layer.output) for layer in gatys_model.layers])
+activation_shapes = [layer.output_shape for layer in gatys_model.layers]
 
-# calculates gram matrix of a tensor
-# TODO: understand and fix
-def gram_matrix(x):
+# calculates gram matrix of the feature maps in a layer
+def compute_gram_matrix(activation):
     # ensure number of axes of tensor is 4
-    assert K.ndim(x) == 4
+    assert K.ndim(activation) == 4
+    # get activation output shape
+    activation_shape = activation.output_shape
+    # N: number of filters
+    # M: size of each feature map
+    N = activation_shape[3]
+    M = activation_shape[1] * activation_shape[2]
+    # format size to: (batch_size, num_filters, img_size, img_size)
     if K.image_data_format() == 'channels_last':
-        features = K.batch_flatten(K.permute_dimensions(x, (0, 3, 1, 2)))
-    gram = K.dot(features, K.transpose(features))
-    return gram
+        activation = K.permute_dimensions(activation, (0, 3, 1, 2))
+    # F: feature maps matrix of shape (N, M)
+    F = K.reshape(activation, (N, M))
+    # G: gram matrix of size (N, N)
+    G = K.dot(F, K.transpose(F))
+    return G
+
+# calculate mean squared distance between original image's gram matrix 
+# and generated image's gram matrix
+def compute_E(G_img, G_gen, N, M):
+    E = 1 / (4*np.square(N)*np.square(M))
+    return E
     
 ## TODO preprocess images
 def preprocess_img(img, img_size):
