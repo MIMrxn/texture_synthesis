@@ -73,6 +73,7 @@ root = 'DbImages'
 dirlist = [ item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item)) ]
 
 for i,fol in enumerate(dirlist):
+    # Set this to only 3 to not run the whole dataset, remove to run all or adjust
     if(i==3):
         break
     imgRoot = root + '/' + fol + '/'
