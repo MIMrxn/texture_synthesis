@@ -64,13 +64,14 @@ def ImageSyn(net, img_org, constraints, init=None, bounds=None, callback=None, m
                           bounds=bounds,
                           callback=callback,
                           options=minimize_options)
-    
+    total_time = time.time() - start_time
     base_dir = os.getcwd()
     metrics_dir = os.path.join(base_dir, 'metrics/')
     img_name = os.path.splitext(img_org)[0]
     metrics_file = os.path.join(metrics_dir, img_name+'_metrics.pkl')
     f = open(metrics_file, 'ab')
     pickle.dump(f_vals, f)
+    pickle.dump(total_time, f)
     f.close()
     return result
     

@@ -284,11 +284,13 @@ def get_img_metrics(img):
         total_params = pickle.load(f)
         maxiter = pickle.load(f)
         f_vals = pickle.load(f)
+        total_time = pickle.load(f) # in seconds
         metrics_dict = {'img_info': img_info, 
                     'summary': summary,
                     'tex_layers': tex_layers,
                     'tex_weigts': tex_weights,
                     'total_params': total_params,
                     'maxiter': maxiter,
-                    'f_vals': f_vals}
+                    'f_vals': f_vals,
+                    'total_time': total_time}
     return metrics_dict
