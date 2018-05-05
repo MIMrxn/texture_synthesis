@@ -3,12 +3,14 @@
 #%pylab inline
 import pylab
 import numpy as np
+from numpy import prod,sum
 import glob
 import sys
 import os
 from collections import OrderedDict
 import caffe
 import time
+import pprint
 base_dir = os.getcwd()
 sys.path.append(base_dir)
 from DeepImageSynthesis import *
@@ -21,6 +23,8 @@ im_dir = os.path.join(base_dir, 'Images/')
 gpu = 0
 caffe.set_mode_gpu() #for cpu mode do 'caffe.set_mode_cpu()'
 caffe.set_device(gpu)
+
+runDataSetImages = False
 
 
 #load source image
@@ -51,8 +55,6 @@ def processImg( imgDir, imgName):
     
     #get optimisation bounds
     bounds = get_bounds([source_img],im_size)
-    print(len(constraints))
-    startTime = time.time()
     # generate new texture
     result = ImageSyn(net, constraints, bounds=bounds,
                       callback=lambda x: show_progress(x,net), 
@@ -72,11 +74,13 @@ def processImg( imgDir, imgName):
 root = 'DbImages'
 dirlist = [ item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item)) ]
 
-for i,fol in enumerate(dirlist):
-    # Set this to only 3 to not run the whole dataset, remove to run all or adjust
-    if(i==3):
-        break
-    imgRoot = root + '/' + fol + '/'
-    imglist = [ item for item in os.listdir(imgRoot) if os.path.isfile(os.path.join(imgRoot, item)) ]
-    for img in imglist:
-        processImg(imgRoot,img)
+if( runDataSetImages ):
+    for i,fol in enumerate(dirlist):
+        if(i==3):
+            break
+        imgRoot = root + '/' + fol + '/'
+        imglist = [ item for item in os.listdir(imgRoot) if os.path.isfile(os.path.join(imgRoot, item)) ]
+        for img in imglist:
+            processImg(imgRoot,img)
+else:
+    processImg(im_dir,'pebbles.jpg')
