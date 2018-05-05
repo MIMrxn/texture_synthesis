@@ -11,6 +11,9 @@ from collections import OrderedDict
 import caffe
 import time
 import pprint
+import matplotlib.pyplot as plt
+from PIL import Image
+
 base_dir = os.getcwd()
 sys.path.append(base_dir)
 from DeepImageSynthesis import *
@@ -31,7 +34,9 @@ runDataSetImages = False
 def processImg( imgDir, imgName):
     source_img_name = glob.glob1(imgDir, imgName)[0]
     source_img_org = caffe.io.load_image(imgDir + source_img_name)
-    im_size = 256.
+    #im_size = 256.
+    # Changed to size in original paper
+    im_size = 224.
     [source_img, net] = load_image(imgDir + source_img_name, im_size, #Uses Misc, to load image
                                 VGGmodel, VGGweights, imagenet_mean, 
                                 show_img=True)
@@ -52,11 +57,14 @@ def processImg( imgDir, imgName):
         constraints[layer] = constraint([LossFunctions.gram_mse_loss],
                                         [{'target_gram_matrix': gram_matrix(net.blobs[layer].data),
                                          'weight': tex_weights[l]}])
+
+    # Create metrics file and populate with model and parameter information
+    begin_metrics(net, source_img_name, im_size, tex_layers, tex_weights, maxiter)
     
     #get optimisation bounds
     bounds = get_bounds([source_img],im_size)
     # generate new texture
-    result = ImageSyn(net, constraints, bounds=bounds,
+    result = ImageSyn(net, constraints, source_img_name, bounds=bounds,
                       callback=lambda x: show_progress(x,net), 
                       minimize_options={'maxiter': maxiter,
                                         'maxcor': m,
@@ -69,6 +77,22 @@ def processImg( imgDir, imgName):
     pylab.savefig( 'results/%s' % (imgName) )
     pylab.figure()
     pylab.imshow(source_img_org)
+
+    # Read and get metrics data
+    metrics_dict = get_img_metrics(source_img_name)
+    y = metrics_dict['f_vals']
+    n = len(y)
+    x = list(range(0, n))
+    # Show full iteration range
+    #plt.plot(x,y)
+    y = y[20:]
+    x = x[20:]
+    # Show loss after leveling off
+    plt.plot(x, y)
+    plt.xlabel('iterations')
+    plt.ylabel('loss')
+    plt.show()
+
     
 # BASED ON https://www.robots.ox.ac.uk/~vgg/data/dtd/ dataset image folder
 root = 'DbImages'
