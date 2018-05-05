@@ -64,7 +64,7 @@ def processImg( imgDir, imgName):
     #get optimisation bounds
     bounds = get_bounds([source_img],im_size)
     # generate new texture
-    result = ImageSyn(net, constraints, source_img_name, bounds=bounds,
+    result = ImageSyn(net, source_img_name, constraints, bounds=bounds,
                       callback=lambda x: show_progress(x,net), 
                       minimize_options={'maxiter': maxiter,
                                         'maxcor': m,
