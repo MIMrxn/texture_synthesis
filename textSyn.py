@@ -91,6 +91,8 @@ def processImg( imgDir, imgName):
     plt.plot(x, y)
     plt.xlabel('iterations')
     plt.ylabel('loss')
+    fig_name = os.path.splitext(imgName)[0]
+    plt.savefig( 'results/%s_plot.png' % (fig_name) )
     plt.show()
 
     
@@ -99,12 +101,17 @@ root = 'DbImages'
 dirlist = [ item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item)) ]
 
 if( runDataSetImages ):
-    for i,fol in enumerate(dirlist):
-        if(i==3):
+    imgs_to_process = 3 # number of images to process per folder
+    folders_to_process = len(dirlist)
+    for i, fol in enumerate(dirlist):
+        if (i==folders_to_process):
             break
         imgRoot = root + '/' + fol + '/'
+        print('Processing images at: ', imgRoot)
         imglist = [ item for item in os.listdir(imgRoot) if os.path.isfile(os.path.join(imgRoot, item)) ]
-        for img in imglist:
+        for j in range(imgs_to_process):
+            img = random.choice(imglist)
+            print('Preprocessing image: ', img)
             processImg(imgRoot,img)
 else:
     processImg(im_dir,'pebbles.jpg')
